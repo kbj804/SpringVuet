@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kAADM02">
+   <select id="allUserList" resultType="KAADM02VO">
+      <![CDATA[
+        select /* sdk knm/KAADM02_SQL.xml - allUserList - 사용자정보 */
+               tu.user_id                             /* 이메일  */
+             , tu.user_name                           /* 사용자명 */
+             , tu.user_pw                             /* 비밀번호  */
+             , COALESCE(tu.company,'--') AS company   /* 소속회사  */
+             , tu.user_type                           /* 권한그룹  */
+             , COALESCE((select tc.code_content 
+                  from tb_code tc 
+                 where tc.code_id  = tu.solution )) 
+                    as solution_name                  /* 솔루션 명 */
+             , tu.solution                            /* 솔루션 id */
+             , COALESCE(tu.dept,'--') AS dept         /* 부서명  */
+             , tu.use_yn                              /* 사용여부 */
+             , tu.reg_date   
+             , COALESCE(TO_CHAR(tu.update_date, 'YYYY-MM-DD HH24:MI'),'--') AS update_date  /* 수정일 */
+             , COALESCE(tu.login_cnt,0) AS login_cnt  /* 로그인 횟수 */ 
+          from tb_user tu
+         order by user_id
+      ]]>
+   </select>
+
+    <select id="srchUserList" parameterType="map" resultType="KAADM02VO">
+      <![CDATA[
+        select /* sdk knm/KAADM02_SQL.xml - srchUserList - 사용자정보 조회 */
+               user_id                             /* 이메일  */
+             , user_name                           /* 사용자명 */
+             , user_pw                             /* 비밀번호  */
+             , COALESCE(company,'--') AS company   /* 소속회사  */
+             , user_type                           /* 권한그룹  */
+             , COALESCE(solution,'--') AS solution /* 담당솔루션  */
+             , COALESCE(dept,'--') AS dept         /* 부서명  */
+             , use_yn                              /* 사용여부 */
+             , reg_date   
+             , COALESCE(TO_CHAR(update_date, 'YYYY-MM-DD HH24:MI'),'--') AS update_date  /* 수정일 */
+             , login_lock                          /* 로그인 실패 */ 
+             , login_cnt                           /* 로그인 횟수 */ 
+          from tb_user 
+         where 1=1
+      ]]>
+      <if test='user_id != "" and user_id != null '> 
+      <![CDATA[
+	        and user_id like '%'||#{user_id}||'%'
+        ]]>
+      </if>
+      <if test='user_name != "" and user_name != null '> 
+      <![CDATA[
+	        and user_name like'%'||#{user_name}||'%'
+        ]]>
+      </if>
+      <if test='company != "" and company != null '> 
+      <![CDATA[
+	        and company like '%'||#{company}||'%'
+        ]]>
+      </if>
+      <![CDATA[
+	      order by user_id
+      ]]>
+   </select>
+
+    <update id="updateUserInfo" parameterType="java.util.List">
+      <foreach collection="list" item="item" separator=";">
+      <![CDATA[
+        update tb_user /* sdk knm/KAADM02_SQL.xml - updateUserInfo - 사용자정보 수정 */
+           set 
+               user_pw       = #{item.user_pw}        
+             , company       = #{item.company}        /* 소속회사  */
+             , user_type     = #{item.user_type}      /* 권한그룹  */
+             , solution      = #{item.solution}       /* 담당솔루션  */
+             , dept          = #{item.dept}           /* 부서명  */
+             , use_yn        = #{item.use_yn}         /* 사용여부 */
+             , login_cnt     = #{item.login_cnt}      /* 로그인횟수 */
+             , update_date   = current_timestamp      /* 수정일 */
+             , update_userid = #{item.update_userid}  /* 수정자 */
+         where user_id       = #{item.user_id}
+      ]]>
+      </foreach>
+   </update>
+
+   
+    <delete id="deleteUserInfo" parameterType="java.util.List">
+      <foreach collection="list" item="item" separator=";">
+      <![CDATA[
+        delete /* sdk knm/KAADM02_SQL.xml - updateUserInfo - 사용자정보 수정 */
+          from tb_user 
+         where user_id = #{item.user_id} 
+      ]]>
+      </foreach>
+   </delete>
+   
+   
+</mapper>

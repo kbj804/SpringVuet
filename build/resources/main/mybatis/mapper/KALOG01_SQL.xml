@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="KALOG01">
+
+	<!-- 회원가입 -->
+	<insert id="signUp" parameterType="KALOG01VO">
+	<![CDATA[
+	INSERT INTO tb_user (
+		user_id,
+		user_name,
+		user_pw,
+		company,
+		user_type,
+		reg_date,
+		solution,
+		dept
+	) VALUES (
+		#{user_id},
+		#{user_name},
+		#{user_pw},
+		#{company},
+		#{user_type},
+		NOW(),
+		#{solution},
+		#{dept}
+	)
+	]]>
+	</insert>
+
+	<!-- 로그인 checkId-->
+	<select id="checkId" parameterType="String" resultType="KALOG01VO">
+	<![CDATA[
+	SELECT *
+	FROM tb_user
+	WHERE user_id = #{user_id} AND login_lock = 'N'
+	]]>
+	</select>
+
+	<!-- 로그인 실패 count++ --> 
+	<insert id="loginCount" parameterType="String">
+	<![CDATA[
+	UPDATE tb_user
+	SET login_cnt = login_cnt + 1
+	WHERE user_id = #{user_id}
+	]]>
+	</insert>
+
+	<!-- 로그인 시도 count 조회 --> 
+	<select id="selectCount" resultType="int">
+	<![CDATA[
+	SELECT login_cnt
+	FROM tb_user
+	WHERE user_id = #{user_id}
+	]]>
+	</select>
+
+	<!-- 계정 잠금 -->
+	<update id="loginRock" parameterType="String">
+	<![CDATA[
+	UPDATE tb_user
+	SET login_lock='Y'
+	WHERE user_id= #{user_id}
+	]]>
+	</update>
+
+	<!-- 계정 잠금 여부 확인 -->
+	<select id="selectLock" parameterType="String" resultType="String">
+	<![CDATA[
+	SELECT login_lock
+	FROM tb_user
+	WHERE user_id = #{user_id}
+	]]>
+	</select>
+
+	<!-- 비밀번호 변경 -->
+	<update id="updatePassword" parameterType="KALOG01VO">
+	<![CDATA[
+	UPDATE tb_user
+	SET user_pw = #{user_pw}
+	WHERE user_id = #{user_id}
+	]]>
+	</update>
+
+	<!-- 아이디 중복 체크 -->
+	<select id="idCheck" parameterType="String" resultType="int">
+	<![CDATA[
+	SELECT COUNT(user_id)
+	FROM tb_user
+	WHERE user_id = #{user_id}
+	]]>
+	</select>
+
+	<!-- get 솔루션 목록  -->
+	<select id="getSolution" resultMap="selectMapList">
+	<![CDATA[
+	SELECT code_id, code_content
+	FROM tb_code
+	WHERE code_name = 'SOLUTION' AND code_id >='SL010000'
+	]]>
+	</select>
+
+	<resultMap type="map" id="selectMapList">
+	<result column="code_id" property="codeId"/>
+	<result column="code_content" property="codeContent"/>
+	</resultMap>
+
+
+</mapper>
